@@ -37,13 +37,16 @@ def process_input():
     return str(response)
 
 
+import openai
+
 def process_speech(user_message):
     response = openai.Completion.create(
-        model="text-davinci-003",  # or any other model you want to use
+        model="text-davinci-003",  # Or the model you want to use
         prompt=user_message,
         max_tokens=150
     )
-    return response['choices'][0]['text'].strip()
+    return response.choices[0].text.strip()  # Fetch the response text
+
 
 if __name__ == "__main__":
     # Bind to port 10000 for Render
