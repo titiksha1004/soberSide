@@ -15,6 +15,9 @@ if not os.getenv("OPENAI_API_KEY"):
 # Set OpenAI API key
 openai.api_key = os.getenv("OPENAI_API_KEY")
 
+# Debug print to check if the API key is loaded correctly
+print(f"Loaded OpenAI API Key: {os.getenv('OPENAI_API_KEY')}")
+
 app = Flask(__name__)
 
 @app.route("/")
@@ -59,7 +62,7 @@ def process_speech(user_input):
         )
 
         # Extract and return the AI's reply from the response
-        ai_reply = response.choices[0].message['content']  # Ensure this is correct for OpenAI v1.0.0+
+        ai_reply = response['choices'][0]['message']['content']  # Ensure this is correct for OpenAI v1.0.0+
         return ai_reply
 
     except Exception as e:
