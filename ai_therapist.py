@@ -34,7 +34,7 @@ def answer_call():
     return str(response)
 
 # Route to handle the speech input from the user
-@app.route("/process_speech", methods=["POST"])
+@app.route("/process_speech", methods=["GET", "POST"])
 def process_speech():
     """Process the user's speech input and get a response from OpenAI"""
     # Get the speech input from Twilio
