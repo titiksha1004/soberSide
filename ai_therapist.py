@@ -19,7 +19,7 @@ def home():
     return "Welcome to the AI Therapist. This is the homepage. Calls go through /answer."
 
 # Route to handle incoming calls to Twilio
-@app.route("/answer", methods=["POST"])
+@app.route("/answer", methods=["GET", "POST"])
 def answer_call():
     """Handle incoming call from Twilio and respond with a prompt"""
     response = VoiceResponse()
