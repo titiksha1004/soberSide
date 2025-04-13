@@ -37,15 +37,21 @@ def process_input():
         return jsonify({"message": "Ready to process your input!"})
 
 def process_speech(user_input):
-    # This is where the OpenAI API call will happen
-    response = openai.Completion.create(
-        model="gpt-4",  # Or use 'gpt-3.5-turbo' if needed
-        prompt=user_input,
-        max_tokens=150,
-        temperature=0.7,
-    )
-    return response.choices[0].text.strip()  # Return the response text 
+    try:
+        # API call to OpenAI's model
+        response = openai.Completion.create(
+            model="gpt-4",  # Ensure the model name is correct, or use another model if needed
+            prompt=user_input,
+            max_tokens=150,
+            temperature=0.7,
+        )
+        # Return the AI's response
+        return response.choices[0].text.strip()
 
+    except Exception as e:
+        logging.error(f"Error processing speech: {e}")
+        return "Sorry, an error occurred while processing your input. Please try again."
+    
 if __name__ == "__main__":
     # Bind to port 10000 for Render
     port = int(os.environ.get("PORT", 10000))  # Default to 10000 if not set
