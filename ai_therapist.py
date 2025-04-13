@@ -27,7 +27,7 @@ def answer_call():
     gather.say("Please say something, I am listening.")
     return str(response)
 
-@app.route("/process", methods=["POST"])
+@app.route("/process", methods=["GET", "POST"])
 def process_input():
     user_input = request.form['SpeechResult']
     ai_response = process_speech(user_input)
@@ -37,16 +37,18 @@ def process_input():
     return str(response)
 
 
+
 import openai
 
 def process_speech(user_message):
-    response = openai.Completion.create(
-        model="text-davinci-003",  # Or the model you want to use
-        prompt=user_message,
-        max_tokens=150
+    response = openai.ChatCompletion.create(
+        model="gpt-3.5-turbo",  # Or the model you want to use
+        messages=[
+            {"role": "system", "content": "You are a helpful assistant."},
+            {"role": "user", "content": user_message},
+        ]
     )
-    return response.choices[0].text.strip()  # Fetch the response text
-
+    return response['choices'][0]['message']['content'].strip()
 
 if __name__ == "__main__":
     # Bind to port 10000 for Render
