@@ -29,28 +29,21 @@ def answer_call():
 
 @app.route("/process", methods=["POST"])
 def process_input():
-    """ Process the user's speech input with AI therapist """
-    user_input = request.form.get('SpeechResult', None)  # Get the speech result from the Twilio call
-
-    if not user_input:
-        return "No speech input received. Please try again.", 400
-    
-    ai_response = process_speech(user_input)  # Calls the process_speech function to get AI response
+    user_input = request.form['SpeechResult']
+    ai_response = process_speech(user_input)
     
     response = VoiceResponse()
     response.say(ai_response)
     return str(response)
 
+
 def process_speech(user_message):
-    """ Process speech with OpenAI GPT-4 """
-    response = openai.ChatCompletion.create(
-        model="gpt-4",
-        messages=[
-            {"role": "system", "content": "You are a compassionate AI therapist."},
-            {"role": "user", "content": user_message}
-        ]
+    response = openai.Completion.create(
+        model="text-davinci-003",  # or any other model you want to use
+        prompt=user_message,
+        max_tokens=150
     )
-    return response['choices'][0]['message']['content']
+    return response['choices'][0]['text'].strip()
 
 if __name__ == "__main__":
     # Bind to port 10000 for Render
