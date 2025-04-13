@@ -8,7 +8,6 @@ import logging
 # Load environment variables
 load_dotenv()
 
-# Set logging for debugging
 logging.basicConfig(level=logging.DEBUG)
 
 # Set OpenAI API key
@@ -32,12 +31,13 @@ def answer_call():
 
 @app.route("/process", methods=["POST"])
 def process_input():
-    """Process user input after gathering from Twilio"""
+    """ Process user input after gathering from Twilio """
     if request.method == 'POST':
-        # Debugging: Log the incoming speech result to ensure it's captured correctly
-        logging.debug(f"Received input: {request.form}")
-        
+        # Access the speech result from Twilio (form data)
         user_input = request.form.get('SpeechResult', '')
+        
+        # Log the received speech input for debugging
+        logging.debug(f"Received SpeechInput: {user_input}")
         
         if not user_input:
             return jsonify({"message": "Sorry, I couldn't understand. Please try again."})
@@ -46,19 +46,22 @@ def process_input():
         return jsonify({"response": ai_response})  # Send the response as JSON
 
 def process_speech(user_input):
-    """ Process the user's speech input using OpenAI's API """
     try:
+        # Debugging: Check the input before sending it to OpenAI
+        logging.debug(f"Processing the input: {user_input}")
+        
         # Using the updated OpenAI API (for version >=1.0.0)
         response = openai.ChatCompletion.create(
-            model="gpt-3.5-turbo",  # Or you can use gpt-4 if you want
-            messages=[  # Updated structure for the conversation
+            model="gpt-3.5-turbo",  # You can also use gpt-4 if you want
+            messages=[
                 {"role": "system", "content": "You are a helpful assistant."},
                 {"role": "user", "content": user_input}  # User input as part of conversation
             ]
         )
 
         # Extract and return the AI's reply from the response
-        ai_reply = response['choices'][0]['message']['content']  # Corrected for v1.0.0+
+        ai_reply = response.choices[0]['message']['content']  # Ensure this is correct for OpenAI v1.0.0+
+        logging.debug(f"AI Response: {ai_reply}")
         return ai_reply
 
     except Exception as e:
