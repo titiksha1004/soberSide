@@ -35,21 +35,31 @@ def answer_call():
     
     return str(response)
 
-@app.route("/process", methods=["POST"])
+@app.route("/process", methods=["GET", "POST"])
 def process_input():
     """ Process the user's speech input with AI therapist """
-    user_input = request.form['SpeechResult']  # Get the speech result from the Twilio call
-
-    # Ensure the input is available
-    if user_input:
-        ai_response = process_speech(user_input)  # Calls the process_speech function to get AI response
-    else:
-        ai_response = "I couldn't understand your input, can you please try again?"
-
-    # Respond with AI's message
+    
+    # Check if 'SpeechResult' exists in the request form data
+    user_input = request.form.get('SpeechResult', None)  # Use get to avoid KeyError if it's missing
+    
+    if not user_input:
+        # Log if no input is received
+        return "No speech input received. Please try again.", 400
+    
+    # Log the user input for debugging
+    print(f"User input: {user_input}")
+    
+    try:
+        ai_response = process_speech(user_input)  # Call the process_speech function to get AI response
+    except Exception as e:
+        # Handle any errors that occur during the AI processing
+        print(f"Error while processing speech: {str(e)}")
+        ai_response = "Sorry, I encountered an error while processing your message."
+    
     response = VoiceResponse()
     response.say(ai_response)
     return str(response)
+
 
 if __name__ == "__main__":
     # Bind to port 10000 for Render
