@@ -8,14 +8,11 @@ import logging
 # Load environment variables
 load_dotenv()
 
+logging.basicConfig(level=logging.DEBUG)
+
 # Set OpenAI API key
 openai.api_key = os.getenv("OPENAI_API_KEY")
-
-# Initialize Flask app
 app = Flask(__name__)
-
-# Configure logging
-logging.basicConfig(level=logging.DEBUG)
 
 @app.route("/")
 def home():
@@ -27,42 +24,41 @@ def answer_call():
     response = VoiceResponse()
     response.say("Hello, I am your AI therapist. How are you feeling today?")
 
-    # Use gather to collect speech input and redirect to /process for handling
+    # Use gather to collect speech input, and redirect to /process for handling
     gather = response.gather(input="speech", timeout=5, speech_timeout="auto", action="/process", method="POST")
     gather.say("Please say something, I am listening.")
     return str(response)
 
 @app.route("/process", methods=["GET", "POST"])
 def process_input():
-    """ Process user input after gathering from Twilio """
     if request.method == 'POST':
-        user_input = request.form['SpeechResult']  # Extract speech input from the request
+        user_input = request.form['SpeechResult']
         ai_response = process_speech(user_input)
-        return jsonify({"response": ai_response})
+        return jsonify({"response": ai_response})  # Send the response as JSON
     else:
+        # Handle GET request, maybe just return a welcome message or status
         return jsonify({"message": "Ready to process your input!"})
 
 def process_speech(user_input):
-    """ Interact with OpenAI's new Chat API to process the user input """
     try:
-        # Use the new API interface for ChatCompletion
+        # Using the updated OpenAI API (for version >=1.0.0)
         response = openai.ChatCompletion.create(
-            model="gpt-3.5-turbo",  # Use GPT-3.5 model
+            model="gpt-3.5-turbo",  # Or you can use gpt-4 if you want
             messages=[
                 {"role": "system", "content": "You are a helpful assistant."},
-                {"role": "user", "content": user_input}  # Dynamic user input
+                {"role": "user", "content": user_input}  # User input as part of conversation
             ]
         )
 
-        # Extract the AI's response and return it
-        ai_text = response['choices'][0]['message']['content'].strip()
-        return ai_text
+        # Extract and return the AI's reply from the response
+        ai_reply = response['choices'][0]['message']['content']
+        return ai_reply
 
     except Exception as e:
         logging.error(f"Error processing speech: {e}")
         return "Sorry, an error occurred while processing your input. Please try again."
 
 if __name__ == "__main__":
-    # Bind to port 10000 for Render
+    # Bind to port 10000 for Render or localhost
     port = int(os.environ.get("PORT", 10000))  # Default to 10000 if not set
     app.run(debug=True, host="0.0.0.0", port=port)
