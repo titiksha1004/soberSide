@@ -9,7 +9,6 @@ load_dotenv()
 
 # Set OpenAI API key
 openai.api_key = os.getenv("OPENAI_API_KEY")
-
 app = Flask(__name__)
 
 @app.route("/")
@@ -37,15 +36,15 @@ def process_input():
         # Handle GET request, maybe just return a welcome message or status
         return jsonify({"message": "Ready to process your input!"})
 
-def process_speech(user_message):
-    response = openai.ChatCompletion.create(
-        model="gpt-3.5-turbo",  # Or the model you want to use
-        messages=[
-            {"role": "system", "content": "You are a helpful assistant."},
-            {"role": "user", "content": user_message},
-        ]
+def process_speech(user_input):
+    # This is where the OpenAI API call will happen
+    response = openai.Completion.create(
+        model="gpt-4",  # Or use 'gpt-3.5-turbo' if needed
+        prompt=user_input,
+        max_tokens=150,
+        temperature=0.7,
     )
-    return response['choices'][0]['message']['content'].strip()
+    return response.choices[0].text.strip()  # Return the response text 
 
 if __name__ == "__main__":
     # Bind to port 10000 for Render
