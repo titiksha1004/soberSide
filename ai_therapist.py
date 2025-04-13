@@ -1,19 +1,34 @@
-import openai
-from dotenv import load_dotenv
+from flask import Flask, request, jsonify
+from twilio.twiml.voice_response import VoiceResponse
+from ai_therapist import process_speech  # Assuming this is where your OpenAI logic is
 import os
+from dotenv import load_dotenv
 
-# Load environment variables
+# Load environment variables from .env
 load_dotenv()
 
-# Set OpenAI API key
-openai.api_key = os.getenv("OPENAI_API_KEY")
+app = Flask(__name__)
 
-def process_speech(user_message):
-    response = openai.ChatCompletion.create(
-        model="gpt-4",  # You can choose another model like gpt-3.5-turbo if needed
-        messages=[
-            {"role": "system", "content": "You are a compassionate AI therapist."},
-            {"role": "user", "content": user_message}
-        ]
-    )
-    return response['choices'][0]['message']['content']
+@app.route("/answer", methods=["GET", "POST"])
+def answer_call():
+    """Handle incoming Twilio call."""
+    response = VoiceResponse()
+    response.say("Hello, I am your AI therapist. How are you feeling today?")
+    response.listen()
+    return str(response)
+
+@app.route("/process", methods=["GET", "POST"])
+def process_input():
+    """Process the user's input with AI therapist."""
+    user_input = request.form['SpeechResult']
+    ai_response = process_speech(user_input)  # Calls OpenAI to process the speech
+    
+    response = VoiceResponse()
+    response.say(ai_response)
+    response.listen()
+    return str(response)
+
+if __name__ == "__main__":
+    # Bind to port 10000 for Render
+    port = int(os.environ.get("PORT", 10000))  # Ensure your app listens on port 10000
+    app.run(debug=True, host="0.0.0.0", port=port)
