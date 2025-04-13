@@ -17,14 +17,15 @@ openai.api_key = os.getenv("OPENAI_API_KEY")
 def index():
     return render_template("index.html")
 
-@app.route("/answer", methods=["GET", "POST"])
+@app.route("/answer", methods=["POST"])
 def answer_call():
     response = VoiceResponse()
-    gather = Gather(input="speech", timeout=5, action="/process", method="POST")
+    gather = Gather(input="speech", timeout=3, speechTimeout="auto", action="/process", method="POST")
     gather.say("Hi, this is your AI therapist. What's on your mind?")
     response.append(gather)
     response.say("I didn't catch that. Please call again.")
     return str(response)
+
 
 @app.route("/process", methods=["POST"])
 def process_speech():
