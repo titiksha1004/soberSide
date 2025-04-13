@@ -17,7 +17,7 @@ openai.api_key = os.getenv("OPENAI_API_KEY")
 def index():
     return render_template("index.html")
 
-@app.route("/answer", methods=["POST"])
+@app.route("/answer", methods=["GET", "POST"])
 def answer_call():
     response = VoiceResponse()
     gather = Gather(input="speech", timeout=3, speechTimeout="auto", action="/process", method="POST")
@@ -25,7 +25,6 @@ def answer_call():
     response.append(gather)
     response.say("I didn't catch that. Please call again.")
     return str(response)
-
 
 @app.route("/process", methods=["POST"])
 def process_speech():
