@@ -29,16 +29,13 @@ def answer_call():
 
 @app.route("/process", methods=["GET", "POST"])
 def process_input():
-    user_input = request.form['SpeechResult']
-    ai_response = process_speech(user_input)
-    
-    response = VoiceResponse()
-    response.say(ai_response)
-    return str(response)
-
-
-
-import openai
+    if request.method == 'POST':
+        user_input = request.form['SpeechResult']
+        ai_response = process_speech(user_input)
+        return jsonify(ai_response)
+    else:
+        # Handle GET request, maybe just return a welcome message or status
+        return jsonify({"message": "Ready to process your input!"})
 
 def process_speech(user_message):
     response = openai.ChatCompletion.create(
