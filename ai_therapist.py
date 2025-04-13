@@ -4,58 +4,60 @@ import openai
 import os
 from dotenv import load_dotenv
 
-# Load environment variables from .env
+# Load environment variables
 load_dotenv()
 
-# Initialize Flask app
+# Set up the Flask app
 app = Flask(__name__)
 
-# Configure OpenAI
+# Set OpenAI API key
 openai.api_key = os.getenv("OPENAI_API_KEY")
 
+# Route to serve the homepage
 @app.route("/")
-def index():
+def home():
     return render_template("index.html")
 
-@app.route("/answer", methods=["GET", "POST"])
+# Route to handle incoming calls to Twilio
+@app.route("/answer", methods=["POST"])
 def answer_call():
-    response = VoiceResponse()
-    gather = Gather(input="speech", timeout=3, speechTimeout="auto", action="/process", method="POST")
+    """Handle incoming call from Twilio and respond with a prompt"""
+    resp = VoiceResponse()
+
+    # Create a Gather verb to capture speech input from the user
+    gather = Gather(input="speech", timeout=5, speechTimeout="auto", action="/gather", method="POST")
     gather.say("Hi, this is your AI therapist. What's on your mind?")
-    response.append(gather)
-    response.say("I didn't catch that. Please call again.")
-    return str(response)
+    resp.append(gather)
 
-@app.route("/process", methods=["POST"])
-def process_speech():
-    user_input = request.form.get("SpeechResult")
-    if not user_input:
-        return "<Response><Say>I didn't hear anything. Goodbye.</Say></Response>"
+    # If no speech is captured, prompt the user again
+    resp.say("I didn't catch that. Please call again.")
+    
+    return str(resp)
 
-    system_prompt = (
-        "You are a compassionate therapist specializing in substance abuse. "
-        "Respond with empathy and brief, supportive advice. Keep it under 3 sentences."
-    )
+# Route to handle the speech input from the user
+@app.route("/gather", methods=["POST"])
+def gather_speech():
+    """Process the user's speech input and get a response from OpenAI"""
+    # Get the speech input from Twilio
+    speech_input = request.form.get('SpeechResult')
 
-    messages = [
-        {"role": "system", "content": system_prompt},
-        {"role": "user", "content": user_input}
-    ]
-
-    completion = openai.ChatCompletion.create(
-        model="gpt-4",
-        messages=messages,
-        max_tokens=100,
+    # Generate a response from OpenAI
+    response = openai.Completion.create(
+        model="text-davinci-003",
+        prompt=f"You are a compassionate therapist. Respond empathetically to the following user input: {speech_input}",
         temperature=0.7,
+        max_tokens=150
     )
 
-    reply = completion.choices[0].message.content.strip()
+    # Get the OpenAI response text
+    ai_response = response.choices[0].text.strip()
 
-    response = VoiceResponse()
-    response.say(reply)
-    return str(response)
+    # Respond with the AI's response
+    resp = VoiceResponse()
+    resp.say(ai_response)
 
-# Required for Render to expose the app properly
+    return str(resp)
+
 if __name__ == "__main__":
-    port = int(os.environ.get("PORT", 5000))
-    app.run(host="0.0.0.0", port=port)
+    # Run the Flask app
+    app.run(host="0.0.0.0", port=5000, debug=True)
