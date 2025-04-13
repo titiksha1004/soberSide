@@ -25,7 +25,7 @@ def answer_call():
     response.say("Hello, I am your AI therapist. How are you feeling today?")
 
     # Use gather to collect speech input, and redirect to /process for handling
-    gather = response.gather(input="speech", timeout=5, speech_timeout="auto", action="/process", method="POST")
+    gather = response.gather(input="speech", timeout=5, speech_timeout=5, action="/process", method="POST")
     gather.say("Please say something, I am listening.")
     return str(response)
 
