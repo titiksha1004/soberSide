@@ -49,14 +49,16 @@ def process_speech(user_input):
     """ Process the user's speech input using OpenAI's API """
     try:
         # Using the updated OpenAI API (for version >=1.0.0)
-        response = openai.Completion.create(
+        response = openai.ChatCompletion.create(
             model="gpt-3.5-turbo",  # Or you can use gpt-4 if you want
-            prompt=user_input,  # Use the user input as the prompt
-            max_tokens=150  # Set the maximum number of tokens for the response
+            messages=[  # Updated structure for the conversation
+                {"role": "system", "content": "You are a helpful assistant."},
+                {"role": "user", "content": user_input}  # User input as part of conversation
+            ]
         )
 
         # Extract and return the AI's reply from the response
-        ai_reply = response['choices'][0]['text'].strip()  # Corrected for v1.0.0+
+        ai_reply = response['choices'][0]['message']['content']  # Corrected for v1.0.0+
         return ai_reply
 
     except Exception as e:
