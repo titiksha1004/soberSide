@@ -25,21 +25,28 @@ def process_speech(user_message):
 
 @app.route("/answer", methods=["GET", "POST"])
 def answer_call():
-    """ Handle incoming Twilio call """
+    """ Handle incoming Twilio call and start gathering input """
     response = VoiceResponse()
     response.say("Hello, I am your AI therapist. How are you feeling today?")
 
-    # Use gather instead of listen to collect speech input
-    gather = response.gather(input="speech", timeout=5, speech_timeout="auto")
+    # Use gather to collect speech input, and redirect to /process for handling
+    gather = response.gather(input="speech", timeout=5, speech_timeout="auto", action="/process", method="POST")
     gather.say("Please say something, I am listening.")
+    
     return str(response)
 
-@app.route("/process", methods=["GET", "POST"])
+@app.route("/process", methods=["POST"])
 def process_input():
-    """ Process the user's input with AI therapist """
+    """ Process the user's speech input with AI therapist """
     user_input = request.form['SpeechResult']  # Get the speech result from the Twilio call
-    ai_response = process_speech(user_input)  # This calls the process_speech function
-    
+
+    # Ensure the input is available
+    if user_input:
+        ai_response = process_speech(user_input)  # Calls the process_speech function to get AI response
+    else:
+        ai_response = "I couldn't understand your input, can you please try again?"
+
+    # Respond with AI's message
     response = VoiceResponse()
     response.say(ai_response)
     return str(response)
