@@ -29,6 +29,6 @@ def process_input():
     return str(response)
 
 if __name__ == "__main__":
-    # Use 10000 as the port for Render
-    port = int(os.environ.get("PORT", 10000))
+    # Ensure Flask binds to the correct port (10000) for Render
+    port = int(os.environ.get("PORT", 10000))  # Default to 10000 if not set
     app.run(debug=True, host="0.0.0.0", port=port)
