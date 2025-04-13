@@ -3,6 +3,8 @@ from twilio.twiml.voice_response import VoiceResponse, Gather
 import openai
 import os
 from dotenv import load_dotenv
+from twilio.twiml.voice_response import VoiceResponse
+
 
 # Load environment variables
 load_dotenv()
@@ -21,17 +23,16 @@ def home():
 # Route to handle incoming calls to Twilio
 @app.route("/answer", methods=['GET', 'POST'])
 def answer_call():
-    if request.method == 'POST':
-        # Handle POST request from Twilio
-        # Your logic for handling the request and responding to the call
-        return """
-            <Response>
-                <Say>Hi, this is your AI therapist. What's on your mind? I didn't catch that. Please call again.</Say>
-                <Pause length="5"/>
-                <Redirect method="POST">/answer</Redirect>
-            </Response>
-        """
-    return "This is the homepage. Calls go through /answer."
+    response = VoiceResponse()
+
+    # Gather user input
+    gather = response.gather(input='speech', timeout=10, num_digits=1)
+    gather.say("Hi, this is your AI therapist. What's on your mind?")
+
+    # If there's no input, say "I didn't catch that"
+    response.redirect('/answer')
+
+    return str(response)
 
 # Route to handle the speech input from the user
 @app.route("/gather", methods=["POST"])
