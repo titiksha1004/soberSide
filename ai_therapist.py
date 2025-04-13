@@ -25,7 +25,7 @@ def answer_call():
     response.say("Hello, I am your AI therapist. How are you feeling today?")
 
     # Use gather to collect speech input, and redirect to /process for handling
-    gather = response.gather(input="speech", timeout=5, speech_timeout=5, action="/process", method="POST")
+    gather = response.gather(input="speech", timeout=5, speech_timeout="auto", action="/process", method="POST")
     gather.say("Please say something, I am listening.")
     return str(response)
 
@@ -33,7 +33,7 @@ def answer_call():
 def process_input():
     if request.method == 'POST':
         # Access the speech result from Twilio (form data)
-        user_input = request.form.get('SpeechResult', '')
+        user_input = request.form.get('SpeechResult', '').strip()
         
         if not user_input:
             return jsonify({"message": "Sorry, I couldn't understand. Please try again."})
@@ -52,8 +52,8 @@ def process_speech(user_input):
             ]
         )
 
-        # Extract and return the AI's reply from the response
-        ai_reply = response.choices[0].message['content']  # Ensure this is correct for OpenAI v1.0.0+
+        # Extract and return the AI's reply from the response (correct way for v1.0.0+)
+        ai_reply = response['choices'][0]['message']['content']
         return ai_reply
 
     except Exception as e:
