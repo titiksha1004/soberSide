@@ -2,8 +2,6 @@ services:
   - type: web
     name: ai-therapist
     env: python
-    buildCommand: ""
-    startCommand: python ai_therapist.py
-    envVars:
-      - key: OPENAI_API_KEY
-        value: your-real-key-here
+    buildCommand: "pip install -r requirements.txt"
+    startCommand: "python server.py"
+    autoDeploy: true
