@@ -42,7 +42,7 @@ def process_input():
 def process_speech(user_input):
     try:
         # Use the correct method for v1.0.0+ of OpenAI API
-        response = openai.Completion.create(
+        response = openai.ChatCompletion.create(
             model="gpt-3.5-turbo",  # or use another model like 'gpt-4'
             prompt=user_input,       # Use the user's input as the prompt
             max_tokens=150,          # Adjust based on your needs
