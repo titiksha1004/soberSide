@@ -11,7 +11,7 @@ load_dotenv()
 app = Flask(__name__)
 
 # Set OpenAI API key
-openai.api_key = os.getenv("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")
+openai.api_key = os.getenv("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") 
 
 # Route to serve the homepage
 @app.route("/")
