@@ -1,17 +1,20 @@
-from flask import Flask, request, jsonify
-from twilio.twiml.voice_response import VoiceResponse
 import openai
 import os
 from dotenv import load_dotenv
 import logging
+from flask import Flask, request, jsonify
+from twilio.twiml.voice_response import VoiceResponse
 
 # Load environment variables
 load_dotenv()
 
-logging.basicConfig(level=logging.DEBUG)
+# Ensure the OpenAI API key is loaded
+if not os.getenv("OPENAI_API_KEY"):
+    raise ValueError("OpenAI API key not set. Please check your .env file.")
 
 # Set OpenAI API key
 openai.api_key = os.getenv("OPENAI_API_KEY")
+
 app = Flask(__name__)
 
 @app.route("/")
@@ -31,13 +34,9 @@ def answer_call():
 
 @app.route("/process", methods=["POST"])
 def process_input():
-    """ Process user input after gathering from Twilio """
     if request.method == 'POST':
         # Access the speech result from Twilio (form data)
         user_input = request.form.get('SpeechResult', '')
-        
-        # Log the received speech input for debugging
-        logging.debug(f"Received SpeechInput: {user_input}")
         
         if not user_input:
             return jsonify({"message": "Sorry, I couldn't understand. Please try again."})
@@ -47,22 +46,20 @@ def process_input():
 
 def process_speech(user_input):
     try:
-        # Debugging: Check the input before sending it to OpenAI
-        logging.debug(f"Processing the input: {user_input}")
-        
         # Using the updated OpenAI API (for version >=1.0.0)
-        response = openai.completions.create(  # Updated method for the new API
-            model="gpt-3.5-turbo",  # You can also use gpt-4 if you want
-            prompt=user_input,  # The user input as the prompt for OpenAI
-            max_tokens=150,  # Max number of tokens for the response
-            n=1,  # Only generate one response
-            stop=None,  # You can define stopping sequences if needed
-            temperature=0.7  # Controls randomness, you can adjust this
+        response = openai.ChatCompletion.create(
+            model="gpt-3.5-turbo",  # Or you can use gpt-4 if you want
+            messages=[{
+                "role": "system", 
+                "content": "You are a helpful assistant."
+            }, {
+                "role": "user", 
+                "content": user_input  # User input as part of conversation
+            }]
         )
 
         # Extract and return the AI's reply from the response
-        ai_reply = response.choices[0]['text'].strip()  # Ensure correct access to the response data
-        logging.debug(f"AI Response: {ai_reply}")
+        ai_reply = response.choices[0].message['content']  # Ensure this is correct for OpenAI v1.0.0+
         return ai_reply
 
     except Exception as e:
