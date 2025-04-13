@@ -32,7 +32,7 @@ def answer_call():
     gather.say("Please say something, I am listening.")
     return str(response)
 
-@app.route("/process", methods=["POST"])
+@app.route("/process", methods=["GET", "POST"])
 def process_input():
     if request.method == 'POST':
         # Access the speech result from Twilio (form data)
