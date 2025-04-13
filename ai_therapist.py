@@ -8,6 +8,7 @@ import logging
 # Load environment variables
 load_dotenv()
 
+# Set logging for debugging
 logging.basicConfig(level=logging.DEBUG)
 
 # Set OpenAI API key
@@ -25,15 +26,18 @@ def answer_call():
     response.say("Hello, I am your AI therapist. How are you feeling today?")
 
     # Use gather to collect speech input, and redirect to /process for handling
-    gather = response.gather(input="speech", timeout=5, speech_timeout="auto", action="/process", method="POST")
+    gather = response.gather(input="speech", timeout=5, speech_timeout=5, action="/process", method="POST")
     gather.say("Please say something, I am listening.")
     return str(response)
 
 @app.route("/process", methods=["POST"])
 def process_input():
+    """Process user input after gathering from Twilio"""
     if request.method == 'POST':
-        # Access the speech result from Twilio (form data)
-        user_input = request.form.get('SpeechResult', '').strip()
+        # Debugging: Log the incoming speech result to ensure it's captured correctly
+        logging.debug(f"Received input: {request.form}")
+        
+        user_input = request.form.get('SpeechResult', '')
         
         if not user_input:
             return jsonify({"message": "Sorry, I couldn't understand. Please try again."})
@@ -42,18 +46,17 @@ def process_input():
         return jsonify({"response": ai_response})  # Send the response as JSON
 
 def process_speech(user_input):
+    """ Process the user's speech input using OpenAI's API """
     try:
         # Using the updated OpenAI API (for version >=1.0.0)
-        response = openai.ChatCompletion.create(
+        response = openai.Completion.create(
             model="gpt-3.5-turbo",  # Or you can use gpt-4 if you want
-            messages=[
-                {"role": "system", "content": "You are a helpful assistant."},
-                {"role": "user", "content": user_input}  # User input as part of conversation
-            ]
+            prompt=user_input,  # Use the user input as the prompt
+            max_tokens=150  # Set the maximum number of tokens for the response
         )
 
-        # Extract and return the AI's reply from the response (correct way for v1.0.0+)
-        ai_reply = response['choices'][0]['message']['content']
+        # Extract and return the AI's reply from the response
+        ai_reply = response['choices'][0]['text'].strip()  # Corrected for v1.0.0+
         return ai_reply
 
     except Exception as e:
