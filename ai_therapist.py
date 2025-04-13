@@ -8,12 +8,14 @@ import logging
 # Load environment variables
 load_dotenv()
 
-logging.basicConfig(level=logging.DEBUG)
-
 # Set OpenAI API key
 openai.api_key = os.getenv("OPENAI_API_KEY")
 
+# Initialize Flask app
 app = Flask(__name__)
+
+# Configure logging
+logging.basicConfig(level=logging.DEBUG)
 
 @app.route("/")
 def home():
@@ -25,36 +27,25 @@ def answer_call():
     response = VoiceResponse()
     response.say("Hello, I am your AI therapist. How are you feeling today?")
 
-    # Use gather to collect speech input, and redirect to /process for handling
+    # Use gather to collect speech input and redirect to /process for handling
     gather = response.gather(input="speech", timeout=5, speech_timeout="auto", action="/process", method="POST")
     gather.say("Please say something, I am listening.")
     return str(response)
 
-@app.route("/process", methods=["POST"])
+@app.route("/process", methods=["GET", "POST"])
 def process_input():
-    """ Process the speech input from the user """
+    """ Process user input after gathering from Twilio """
     if request.method == 'POST':
-        try:
-            # Retrieve the SpeechResult from Twilio's request data
-            user_input = request.form['SpeechResult']
-            
-            # Process the speech input using OpenAI's API
-            ai_response = process_speech(user_input)
-
-            return jsonify({"response": ai_response})  # Return AI's response as JSON
-        except Exception as e:
-            logging.error(f"Error processing input: {e}")
-            return jsonify({"error": "Sorry, an error occurred while processing your input. Please try again."})
-    
-@app.route("/process", methods=["GET"])
-def process_get():
-    """ Optional: Handle GET requests to /process, perhaps just a simple message """
-    return jsonify({"message": "Ready to process your input!"})
+        user_input = request.form['SpeechResult']  # Extract speech input from the request
+        ai_response = process_speech(user_input)
+        return jsonify({"response": ai_response})
+    else:
+        return jsonify({"message": "Ready to process your input!"})
 
 def process_speech(user_input):
-    """ Interact with OpenAI's Chat API to process the user input """
+    """ Interact with OpenAI's new Chat API to process the user input """
     try:
-        # Use the correct method for OpenAI's new API
+        # Use the new API interface for ChatCompletion
         response = openai.ChatCompletion.create(
             model="gpt-3.5-turbo",  # Use GPT-3.5 model
             messages=[
