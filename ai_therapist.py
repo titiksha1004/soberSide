@@ -8,6 +8,8 @@ import logging
 # Load environment variables
 load_dotenv()
 
+logging.basicConfig(level=logging.DEBUG)
+
 # Set OpenAI API key
 openai.api_key = os.getenv("OPENAI_API_KEY")
 app = Flask(__name__)
