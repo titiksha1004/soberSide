@@ -29,15 +29,17 @@ def answer_call():
     gather.say("Please say something, I am listening.")
     return str(response)
 
-@app.route("/process", methods=["GET", "POST"])
+@app.route("/process", methods=["POST"])
 def process_input():
     if request.method == 'POST':
-        user_input = request.form['SpeechResult']
+        # Access the speech result from Twilio (form data)
+        user_input = request.form.get('SpeechResult', '')
+        
+        if not user_input:
+            return jsonify({"message": "Sorry, I couldn't understand. Please try again."})
+        
         ai_response = process_speech(user_input)
         return jsonify({"response": ai_response})  # Send the response as JSON
-    else:
-        # Handle GET request, maybe just return a welcome message or status
-        return jsonify({"message": "Ready to process your input!"})
 
 def process_speech(user_input):
     try:
@@ -51,7 +53,7 @@ def process_speech(user_input):
         )
 
         # Extract and return the AI's reply from the response
-        ai_reply = response['choices'][0]['message']['content']
+        ai_reply = response.choices[0].message['content']  # Ensure this is correct for OpenAI v1.0.0+
         return ai_reply
 
     except Exception as e:
