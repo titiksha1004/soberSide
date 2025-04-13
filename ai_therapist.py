@@ -19,20 +19,19 @@ def home():
     return render_template("index.html")
 
 # Route to handle incoming calls to Twilio
-@app.route("/answer", methods=["POST"])
+@app.route("/answer", methods=['GET', 'POST'])
 def answer_call():
-    """Handle incoming call from Twilio and respond with a prompt"""
-    resp = VoiceResponse()
-
-    # Create a Gather verb to capture speech input from the user
-    gather = Gather(input="speech", timeout=5, speechTimeout="auto", action="/gather", method="POST")
-    gather.say("Hi, this is your AI therapist. What's on your mind?")
-    resp.append(gather)
-
-    # If no speech is captured, prompt the user again
-    resp.say("I didn't catch that. Please call again.")
-    
-    return str(resp)
+    if request.method == 'POST':
+        # Handle POST request from Twilio
+        # Your logic for handling the request and responding to the call
+        return """
+            <Response>
+                <Say>Hi, this is your AI therapist. What's on your mind? I didn't catch that. Please call again.</Say>
+                <Pause length="5"/>
+                <Redirect method="POST">/answer</Redirect>
+            </Response>
+        """
+    return "This is the homepage. Calls go through /answer."
 
 # Route to handle the speech input from the user
 @app.route("/gather", methods=["POST"])
