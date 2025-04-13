@@ -28,7 +28,10 @@ def answer_call():
     """ Handle incoming Twilio call """
     response = VoiceResponse()
     response.say("Hello, I am your AI therapist. How are you feeling today?")
-    response.listen()
+
+    # Use gather instead of listen to collect speech input
+    gather = response.gather(input="speech", timeout=5, speech_timeout="auto")
+    gather.say("Please say something, I am listening.")
     return str(response)
 
 @app.route("/process", methods=["GET", "POST"])
@@ -39,7 +42,6 @@ def process_input():
     
     response = VoiceResponse()
     response.say(ai_response)
-    response.listen()
     return str(response)
 
 if __name__ == "__main__":
