@@ -12,6 +12,7 @@ logging.basicConfig(level=logging.DEBUG)
 
 # Set OpenAI API key
 openai.api_key = os.getenv("OPENAI_API_KEY")
+
 app = Flask(__name__)
 
 @app.route("/")
@@ -29,33 +30,47 @@ def answer_call():
     gather.say("Please say something, I am listening.")
     return str(response)
 
-@app.route("/process", methods=["GET", "POST"])
+@app.route("/process", methods=["POST"])
 def process_input():
+    """ Process the speech input from the user """
     if request.method == 'POST':
-        user_input = request.form['SpeechResult']
-        ai_response = process_speech(user_input)
-        return jsonify(ai_response)
-    else:
-        # Handle GET request, maybe just return a welcome message or status
-        return jsonify({"message": "Ready to process your input!"})
+        try:
+            # Retrieve the SpeechResult from Twilio's request data
+            user_input = request.form['SpeechResult']
+            
+            # Process the speech input using OpenAI's API
+            ai_response = process_speech(user_input)
+
+            return jsonify({"response": ai_response})  # Return AI's response as JSON
+        except Exception as e:
+            logging.error(f"Error processing input: {e}")
+            return jsonify({"error": "Sorry, an error occurred while processing your input. Please try again."})
+    
+@app.route("/process", methods=["GET"])
+def process_get():
+    """ Optional: Handle GET requests to /process, perhaps just a simple message """
+    return jsonify({"message": "Ready to process your input!"})
 
 def process_speech(user_input):
+    """ Interact with OpenAI's Chat API to process the user input """
     try:
-        # Use the correct method for v1.0.0+ of OpenAI API
+        # Use the correct method for OpenAI's new API
         response = openai.ChatCompletion.create(
-            model="gpt-3.5-turbo",  # or use another model like 'gpt-4'
-            prompt=user_input,       # Use the user's input as the prompt
-            max_tokens=150,          # Adjust based on your needs
-            temperature=0.7,         # Control the randomness of the response
+            model="gpt-3.5-turbo",  # Use GPT-3.5 model
+            messages=[
+                {"role": "system", "content": "You are a helpful assistant."},
+                {"role": "user", "content": user_input}  # Dynamic user input
+            ]
         )
 
-        # Return the response text from OpenAI
-        return response.choices[0].text.strip()
+        # Extract the AI's response and return it
+        ai_text = response['choices'][0]['message']['content'].strip()
+        return ai_text
 
     except Exception as e:
         logging.error(f"Error processing speech: {e}")
         return "Sorry, an error occurred while processing your input. Please try again."
-    
+
 if __name__ == "__main__":
     # Bind to port 10000 for Render
     port = int(os.environ.get("PORT", 10000))  # Default to 10000 if not set
