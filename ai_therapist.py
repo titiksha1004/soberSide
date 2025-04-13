@@ -39,15 +39,16 @@ def process_input():
 
 def process_speech(user_input):
     try:
-        # Use the new API method for ChatCompletion
-        response = openai.ChatCompletion.create(
-            model="gpt-3.5-turbo",  # Or use gpt-4 or any other model you want
-            messages=[
-                {"role": "system", "content": "You are a helpful therapist."},
-                {"role": "user", "content": user_input}
-            ]
+        # Use the correct method for v1.0.0+ of OpenAI API
+        response = openai.Completion.create(
+            model="gpt-3.5-turbo",  # or use another model like 'gpt-4'
+            prompt=user_input,       # Use the user's input as the prompt
+            max_tokens=150,          # Adjust based on your needs
+            temperature=0.7,         # Control the randomness of the response
         )
-        return response['choices'][0]['message']['content'].strip()
+
+        # Return the response text from OpenAI
+        return response.choices[0].text.strip()
 
     except Exception as e:
         logging.error(f"Error processing speech: {e}")
